@@ -1,0 +1,50 @@
+version: '3.8'
+
+volumes:
+  postgres-data:
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      # TODO: devcontainer.jsonの方でもcontainerEnvで環境変数しないとvscode拡張側に環境変数が反映されない。
+      #       煩雑そうなので実際に問題が生じたら対応検討。
+      # Ensure that the variables in .env match the same variables in devcontainer.json
+      - ../.env/.env.local
+
+    volumes:
+      - ..:/workspaces/ip-block-batch:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    networks:
+      - ip-block-batch-net
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+      # Ensure that the variables in .env match the same variables in devcontainer.json
+      - ../.env/.env.local
+    networks:
+      - ip-block-batch-net
+
+
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+networks:
+  ip-block-batch-net:
+    name: ip-block-batch-net
+    driver: bridge

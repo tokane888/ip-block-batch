@@ -3,9 +3,13 @@ FROM mcr.microsoft.com/devcontainers/go:1-1.23-bookworm
 # install air
 RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b /usr/local/bin
 
-# install psql (PostgreSQL client)
+# Add PostgreSQL official APT repository and install latest client
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends postgresql-client && \
+    apt-get install -y wget gnupg2 lsb-release && \
+    echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/postgresql.gpg && \
+    apt-get update && \
+    apt-get install -y postgresql-client-17 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
